@@ -13,6 +13,7 @@ export enum NoteConfidence {
 }
 
 export enum Notes {
+    None = '-',
     C = 'C',
     CSharp = 'C#',
     D = 'D',
@@ -27,13 +28,13 @@ export enum Notes {
     B = 'B',
 }
 
-export const useAudioTuner = () => {
+export const useAudioTuner = (tolerance: number = 4) => {
 
     const [noteAccuracy, setNoteAccurancy] = useState<NoteAccuracy>(NoteAccuracy.Unknown);
     const [detuneAmount, setDetuneAmount] = useState<number>(0);
     const [confidence, setConfidence] = useState<NoteConfidence>(NoteConfidence.Vague);
     const [pitch, setPitch] = useState<number>(0);
-    const [note, setNote] = useState<string>('');
+    const [note, setNote] = useState<Notes>(Notes.None);
 
     var audioContext: any = null;
     var analyser: any = null;
@@ -63,21 +64,22 @@ export const useAudioTuner = () => {
     const error = console.error
 
 
-    function noteFromPitch(frequency: number) {
+    const noteFromPitch = (frequency: number) => {
         var noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
         return Math.round(noteNum) + 69;
     }
 
-
-    function frequencyFromNoteNumber(note: number) {
+    const frequencyFromNoteNumber = (note: number) => {
         return 440 * Math.pow(2, (note - 69) / 12);
     }
 
-    function centsOffFromPitch(frequency: number, note: number) {
-        return Math.floor(1200 * Math.log(frequency / frequencyFromNoteNumber(note)) / Math.log(2));
+    const centsOffFromPitch = (frequency: number, note: number) => {
+        const perc = Math.floor(1200 * Math.log(frequency / frequencyFromNoteNumber(note)) / Math.log(2));
+        console.log(perc);
+        return perc
     }
 
-    function autoCorrelate(buf: Float32Array, sampleRate: number) {
+    const autoCorrelate = (buf: Float32Array, sampleRate: number) => {
         // Implements the ACF2+ algorithm
         var SIZE = buf.length;
         var rms = 0;
@@ -168,7 +170,7 @@ export const useAudioTuner = () => {
             setConfidence(NoteConfidence.Vague)
             setDetuneAmount(0)
             setPitch(0);
-            setNote('');
+            setNote(Notes.None);
 
         } else {
             setConfidence(NoteConfidence.Confident)
@@ -179,7 +181,7 @@ export const useAudioTuner = () => {
             setNote(noteStrings[note % 12]);
 
             var detune = centsOffFromPitch(pitch, note);
-            if (detune === 0) {
+            if (detune/tolerance < 1) {
                 setNoteAccurancy(NoteAccuracy.Perfect)
             } else {
                 if (detune < 0) {
@@ -199,7 +201,7 @@ export const useAudioTuner = () => {
 
 
     const gotStream = (stream: any) => {
-        
+
         // Create an AudioNode from the stream.
         mediaStreamSource = audioContext.createMediaStreamSource(stream);
 
