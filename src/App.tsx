@@ -1,26 +1,34 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { useAudioTuner } from './hooks/useAudio';
 
-function App() {
+const App = () => {
+
+  const { 
+    start,
+    noteAccuracy,
+    detuneAmount,
+    confidence,
+    pitch,
+    note,
+  } = useAudioTuner();
+
+  const a = '';
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <button onClick={() => start()} >START</button>
+
+      <div>
+        <p>Note Accuracy: {noteAccuracy}</p>
+        <p>Detune Amount: {detuneAmount}</p>
+        <p>Confidence: {confidence}</p>
+        <p>Pitch: {pitch}</p>
+        <p>Note: {note}</p>
+        </div>
+
     </div>
-  );
+  )
 }
 
 export default App;
